@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarketPulse | 5-Year Stock Trend Analysis</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--bg:#0b1220;--panel:#121d30;--panel2:#17243a;--line:#263650;--text:#e8eef8;--muted:#91a2ba;--green:#24d6a0;--red:#ff6b7a;--blue:#6b9cff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,Segoe UI,Arial,sans-serif}
+header{height:72px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:#0e1829;position:sticky;top:0;z-index:5}
+.brand{font-size:21px;font-weight:800;letter-spacing:.2px}.brand span{color:var(--green)}.nav{color:var(--muted);font-size:13px}
+main{max-width:1240px;margin:auto;padding:34px 24px 60px}.eyebrow{color:var(--green);font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase}
+h1{font-size:clamp(26px,4vw,38px);margin:8px 0 6px}.sub{color:var(--muted);margin:0 0 26px}
+.toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+select,button{background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:11px 14px;border-radius:9px;font-size:14px}
+button{cursor:pointer}button.active{background:#1b765f;border-color:#1b765f}
+.note{color:var(--muted);font-size:12px;margin-left:auto}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:18px}
+.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.card{padding:18px}.card-label{color:var(--muted);font-size:12px}.metric{font-size:25px;font-weight:750;margin:7px 0 2px}.change{font-size:12px;color:var(--green)}.negative{color:var(--red)}
+.content{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(260px,.8fr);gap:16px}
+.panel{padding:20px;margin-bottom:16px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px}.panel h2{font-size:16px;margin:0}.muted{color:var(--muted);font-size:12px}
+.chart-wrap{height:320px;position:relative}.legend{display:flex;gap:18px;color:var(--muted);font-size:12px;margin-top:12px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.signal{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line)}.signal:last-child{border:0}.signal strong{font-size:13px}.pill{padding:4px 9px;border-radius:20px;font-size:11px;background:#123b34;color:var(--green)}.pill.warn{background:#40202b;color:var(--red)}
+.insight{background:#102d2a;border:1px solid #1b594b;border-radius:10px;padding:14px;margin-top:14px;font-size:13px;color:#c7f5e8}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:12px 9px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}td:last-child,th:last-child{text-align:right}
+footer{color:var(--muted);font-size:11px;text-align:center;margin-top:24px}
+@media(max-width:850px){.cards{grid-template-columns:repeat(2,1fr)}.content{grid-template-columns:1fr}.note{margin-left:0;width:100%}}
+@media(max-width:480px){main{padding:25px 14px}.cards{gap:9px}.card{padding:13px}.metric{font-size:21px}.panel{padding:14px}.chart-wrap{height:260px}header{padding:0 16px}}
+</style>
+</head>
+<body>
+<header><div class="brand">Market<span>Pulse.</span></div><div class="nav">MARKET INSIGHTS&nbsp; · &nbsp;5-YEAR ANALYSIS</div></header>
+<main>
+<div class="eyebrow">Historical market intelligence</div>
+<h1>Stock Market Trend Analysis</h1>
+<p class="sub">Explore long-term price movements, performance and technical trend signals.</p>
+<div class="toolbar">
+<label for="stockSelect" class="muted">Select asset</label>
+<select id="stockSelect">
+<option value="NIFTY 50">NIFTY 50</option><option value="RELIANCE">Reliance Industries</option><option value="TCS">TCS</option><option value="INFOSYS">Infosys</option>
+</select>
+<button class="active" id="fiveYear">5 Years</button>
+<span class="note">Period: Jan 2021 – Dec 2025 · Illustrative sample data</span>
+</div>
+<section class="cards">
+<div class="card"><div class="card-label">Latest sample price</div><div class="metric" id="price">—</div><div class="change" id="daily">5-year view</div></div>
+<div class="card"><div class="card-label">5-year return</div><div class="metric" id="return">—</div><div class="change">From first to last sample point</div></div>
+<div class="card"><div class="card-label">5-year high</div><div class="metric" id="high">—</div><div class="change">Highest monthly sample</div></div>
+<div class="card"><div class="card-label">5-year low</div><div class="metric" id="low">—</div><div class="change">Lowest monthly sample</div></div>
+</section>
+<div class="content">
+<div>
+<section class="panel">
+<div class="panel-head"><h2>Price history & moving averages</h2><span class="muted">Monthly · 2021–2025</span></div>
+<div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+<div class="legend"><span><i class="dot" style="background:#6b9cff"></i>Price</span><span><i class="dot" style="background:#24d6a0"></i>SMA 50</span><span><i class="dot" style="background:#ffbd5c"></i>SMA 200</span></div>
+</section>
+<section class="panel">
+<div class="panel-head"><h2>Year-wise performance</h2><span class="muted">Calendar-year change</span></div>
+<table><thead><tr><th>Year</th><th>Start price</th><th>End price</th><th>Return</th></tr></thead><tbody id="yearRows"></tbody></table>
+</section>
+</div>
+<div>
+<section class="panel">
+<div class="panel-head"><h2>Technical snapshot</h2><span class="muted">Based on sample series</span></div>
+<div class="signal"><strong>Overall trend</strong><span class="pill" id="trend">—</span></div>
+<div class="signal"><strong>Price vs SMA 50</strong><span class="pill" id="sma50Signal">—</span></div>
+<div class="signal"><strong>Price vs SMA 200</strong><span class="pill" id="sma200Signal">—</span></div>
+<div class="signal"><strong>Volatility</strong><span class="pill" id="volatility">—</span></div>
+<div class="insight" id="insight">Select an asset to view a summary of its sample trend.</div>
+</section>
+<section class="panel">
+<div class="panel-head"><h2>How to read this dashboard</h2></div>
+<p class="muted"><b>Price:</b> Historical monthly closing-price illustration.</p>
+<p class="muted"><b>SMA 50:</b> Average of the latest 50 monthly observations.</p>
+<p class="muted"><b>SMA 200:</b> Average of the latest 200 monthly observations. Since this sample spans 60 months, the line appears only when enough observations exist; otherwise it is unavailable.</p>
+<p class="muted"><b>Trend:</b> A simple comparison of the latest price with moving averages. It is not a trading recommendation.</p>
+</section>
+</div>
+</div>
+<footer>Educational demo only. Values are generated sample data, not actual exchange prices or investment advice. Chart.js requires an internet connection to load.</footer>
+</main>
+<script>
+const configs={
+"NIFTY 50":{base:14000,growth:.0019,amp:850,phase:0},
+"RELIANCE":{base:1900,growth:.0022,amp:145,phase:1.2},
+"TCS":{base:2900,growth:.0017,amp:190,phase:2.1},
+"INFOSYS":{base:1250,growth:.0020,amp:105,phase:2.8}
+};
+const labels=Array.from({length:60},(_,i)=>{let d=new Date(2021, i,1);return d.toLocaleDateString('en-IN',{month:'short',year:'2-digit'})});
+let chart;
+function buildSeries(name){
+ const c=configs[name];return labels.map((_,i)=>Math.max(c.base*.55,c.base*Math.pow(1+c.growth,i)+Math.sin(i*.42+c.phase)*c.amp+Math.sin(i*.16+c.phase)*c.amp*.55));
+}
+function sma(data,n){return data.map((_,i)=>i<n-1?null:data.slice(i-n+1,i+1).reduce((a,b)=>a+b,0)/n)}
+function money(v){return '₹'+Math.round(v).toLocaleString('en-IN')}
+function render(){
+ const name=document.getElementById('stockSelect').value, data=buildSeries(name), last=data.at(-1), first=data[0], hi=Math.max(...data),lo=Math.min(...data),ret=(last/first-1)*100;
+ document.getElementById('price').textContent=money(last);
+ document.getElementById('return').textContent=(ret>=0?'+':'')+ret.toFixed(1)+'%';
+ document.getElementById('return').className='metric '+(ret<0?'negative':'');
+ document.getElementById('high').textContent=money(hi);document.getElementById('low').textContent=money(lo);
+ const s50=sma(data,Math.min(12,data.length)).at(-1),s200=null;
+ const setSignal=(id,ok,text)=>{let e=document.getElementById(id);e.textContent=text;e.className='pill'+(ok?'':' warn')};
+ const up=ret>=0;setSignal('trend',up,up?'Uptrend':'Downtrend');
+ setSignal('sma50Signal',last>=s50,last>=s50?'Above average':'Below average');
+ setSignal('sma200Signal',false,'Not enough data');
+ const changes=data.slice(1).map((v,i)=>v/data[i]-1),vol=Math.sqrt(changes.reduce((a,b)=>a+b*b,0)/changes.length)*100;
+ document.getElementById('volatility').textContent=vol.toFixed(1)+'% monthly';
+ document.getElementById('insight').textContent=`${name} shows a ${up?'positive':'negative'} sample return of ${ret.toFixed(1)}% across the five-year period. The latest sample price is ${last>=s50?'above':'below'} its 12-month average. Use this as a learning example, not a forecast.`;
+ const rows=[];for(let y=0;y<5;y++){let a=data[y*12],b=data[y*12+11],r=(b/a-1)*100;rows.push(`<tr><td>${2021+y}</td><td>${money(a)}</td><td>${money(b)}</td><td class="${r>=0?'':'negative'}">${r>=0?'+':''}${r.toFixed(1)}%</td></tr>`)}
+ document.getElementById('yearRows').innerHTML=rows.join('');
+ if(chart)chart.destroy();
+ chart=new Chart(document.getElementById('priceChart'),{type:'line',data:{labels,datasets:[
+ {label:'Price',data,borderColor:'#6b9cff',backgroundColor:'rgba(107,156,255,.10)',borderWidth:2,pointRadius:0,tension:.25,fill:true},
+ {label:'SMA 50',data:sma(data,12),borderColor:'#24d6a0',borderWidth:1.7,pointRadius:0,tension:.2},
+ {label:'SMA 200',data:sma(data,48),borderColor:'#ffbd5c',borderWidth:1.7,pointRadius:0,tension:.2}
+ ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+money(c.raw)}}},scales:{x:{ticks:{color:'#91a2ba',maxTicksLimit:8},grid:{color:'rgba(145,162,186,.08)'}},y:{ticks:{color:'#91a2ba',callback:v=>'₹'+Number(v).toLocaleString('en-IN')},grid:{color:'rgba(145,162,186,.10)'}}}}});
+}
+document.getElementById('stockSelect').addEventListener('change',render);render();
+</script>
+</body>
+</html>
